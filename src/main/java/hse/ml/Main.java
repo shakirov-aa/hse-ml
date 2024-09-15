@@ -23,9 +23,9 @@ public class Main {
         LinkedHashSet<PhishingEntity> parsedResults = new LinkedHashSet<>();
 
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        scheduledExecutorService.scheduleAtFixedRate(() -> parseAndSaveLocal(parsedResults), 0, 1, TimeUnit.MINUTES);
+        scheduledExecutorService.scheduleAtFixedRate(() -> parseAndSaveLocal(parsedResults), 0, 5, TimeUnit.MINUTES);
 
-        Thread.sleep(TimeUnit.MINUTES.toMillis(3));
+        Thread.sleep(TimeUnit.MINUTES.toMillis(61));
         scheduledExecutorService.shutdownNow();
         saveParsedToFile(parsedResults);
 
