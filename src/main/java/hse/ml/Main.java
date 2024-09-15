@@ -10,7 +10,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class Main {
     private static final Parser PARSER = new Parser();
@@ -83,7 +82,7 @@ public class Main {
                         .toList();
                 out.println("Топ 3 Наиболее часто атакуемых брендов " + topThree);
 
-                out.println("Ссылка на google колаб со скриптом или на github: https://github.com/shakirov-aa/hse-ml");
+                out.println("Ссылка на google колаб со скриптом или на github: https://github.com/shakirov-aa/hse-ml/tree/HW-1");
             }
         } catch (IOException e) {
             System.out.println("Failed to create file with path=" + PARSED_FILE);
