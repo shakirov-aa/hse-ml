@@ -6,7 +6,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -20,20 +29,21 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         Date startTime = new Date();
 
-        LinkedHashSet<PhishingEntity> parsedResults = new LinkedHashSet<>();
+        Set<PhishingEntity> parsedResults = new HashSet<>();
 
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         scheduledExecutorService.scheduleAtFixedRate(() -> parseAndSaveLocal(parsedResults), 0, 5, TimeUnit.MINUTES);
 
-        Thread.sleep(TimeUnit.MINUTES.toMillis(61));
-        scheduledExecutorService.shutdownNow();
+        Thread.sleep(TimeUnit.MINUTES.toMillis(60));
+        scheduledExecutorService.shutdown();
+        scheduledExecutorService.awaitTermination(1L, TimeUnit.MINUTES);
         saveParsedToFile(parsedResults);
 
         Date finishTime = new Date();
         generateReportFile(startTime, finishTime, parsedResults);
     }
 
-    private static void parseAndSaveLocal(LinkedHashSet<PhishingEntity> parsedResults) {
+    private static void parseAndSaveLocal(Set<PhishingEntity> parsedResults) {
         List<PhishingEntity> parsedList = PARSER.parse();
         parsedResults.addAll(parsedList);
         System.out.println("Saved...");
@@ -42,18 +52,20 @@ public class Main {
     private static String convertToCSV(PhishingEntity entity) {
         StringJoiner stringJoiner = new StringJoiner(",");
         stringJoiner.add(entity.getUrl());
-        stringJoiner.add(entity.getTargetedBrand());
+        stringJoiner.add("\"" + entity.getTargetedBrand() + "\""); // у некоторых компаний запятая в названии, поэтому название пишем в кавычках (это допустимо в csv)
         stringJoiner.add(TARGET_DATE_FORMAT.format(entity.getTime()));
         return stringJoiner.toString();
     }
 
-    private static void saveParsedToFile(LinkedHashSet<PhishingEntity> parsedResults) {
+    private static void saveParsedToFile(Set<PhishingEntity> parsedResults) {
+        List<PhishingEntity> sorted = new ArrayList<>(parsedResults);
+        sorted.sort(Comparator.comparing(PhishingEntity::getTime));
         try {
             Files.createFile(PARSED_FILE);
             try (PrintWriter out = new PrintWriter(PARSED_FILE.toFile())) {
                 out.println("url,targetedBrand,time");
 
-                for (PhishingEntity phishingEntity : parsedResults) {
+                for (PhishingEntity phishingEntity : sorted) {
                     out.println(convertToCSV(phishingEntity));
                 }
             }
@@ -63,7 +75,7 @@ public class Main {
         }
     }
 
-    private static void generateReportFile(Date start, Date finish, LinkedHashSet<PhishingEntity> parsedResults) {
+    private static void generateReportFile(Date start, Date finish, Set<PhishingEntity> parsedResults) {
         try {
             Files.createFile(REPORT_FILE);
             try (PrintWriter out = new PrintWriter(REPORT_FILE.toFile())) {
